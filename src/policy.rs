@@ -1,8 +1,4 @@
-use std::{
-    fmt,
-    sync::Arc,
-    time::{Duration, Instant},
-};
+use std::{fmt, sync::Arc, time::Duration};
 
 #[derive(Clone, Debug)]
 /// The policy of a cache.
@@ -152,7 +148,8 @@ impl Default for EvictionPolicyConfig {
 ///   duration (or none)  after its last update.
 ///
 /// The default implementations are provided that return `None` (no expiration) or
-/// `current_duration: Option<Instant>` (not modify the current expiration time).
+/// `current_duration: Option<quanta::Instant
+//>` (not modify the current expiration time).
 /// Override some of them as you need.
 ///
 pub trait Expiry<K, V> {
@@ -183,7 +180,12 @@ pub trait Expiry<K, V> {
     /// policies, the entry will be evicted after the earliest of the expiration time
     /// returned by this expiry, the `time_to_live` and `time_to_idle` policies.
     #[allow(unused_variables)]
-    fn expire_after_create(&self, key: &K, value: &V, created_at: Instant) -> Option<Duration> {
+    fn expire_after_create(
+        &self,
+        key: &K,
+        value: &V,
+        created_at: quanta::Instant,
+    ) -> Option<Duration> {
         None
     }
 
@@ -226,9 +228,9 @@ pub trait Expiry<K, V> {
         &self,
         key: &K,
         value: &V,
-        read_at: Instant,
+        read_at: quanta::Instant,
         duration_until_expiry: Option<Duration>,
-        last_modified_at: Instant,
+        last_modified_at: quanta::Instant,
     ) -> Option<Duration> {
         duration_until_expiry
     }
@@ -271,7 +273,7 @@ pub trait Expiry<K, V> {
         &self,
         key: &K,
         value: &V,
-        updated_at: Instant,
+        updated_at: quanta::Instant,
         duration_until_expiry: Option<Duration>,
     ) -> Option<Duration> {
         duration_until_expiry

@@ -44,7 +44,7 @@ use std::{
         atomic::{AtomicBool, AtomicU8, Ordering},
         Arc,
     },
-    time::{Duration, Instant as StdInstant},
+    time::Duration,
 };
 
 pub(crate) type HouseKeeperArc = Arc<Housekeeper>;
@@ -667,7 +667,7 @@ impl<K, V, S> BaseCache<K, V, S> {
     }
 
     fn expire_after_read_or_update(
-        expiry: impl FnOnce(&K, &V, StdInstant, Option<Duration>) -> Option<Duration>,
+        expiry: impl FnOnce(&K, &V, quanta::Instant, Option<Duration>) -> Option<Duration>,
         key: &K,
         value_entry: &ValueEntry<K, V>,
         ttl: Option<Duration>,
@@ -2574,13 +2574,13 @@ mod tests {
         use std::{
             collections::hash_map::RandomState,
             sync::{Arc, Mutex},
-            time::{Duration, Instant as StdInstant},
+            time::Duration,
         };
 
         type Key = u32;
         type Value = char;
 
-        fn current_time(cache: &BaseCache<Key, Value>) -> StdInstant {
+        fn current_time(cache: &BaseCache<Key, Value>) -> quanta::Instant {
             cache.inner.clock().to_std_instant(cache.current_time())
         }
 
@@ -2628,23 +2628,23 @@ mod tests {
                 caller_line: u32,
                 key: Key,
                 value: Value,
-                current_time: StdInstant,
+                current_time: quanta::Instant,
                 new_duration_secs: Option<u64>,
             },
             AfterRead {
                 caller_line: u32,
                 key: Key,
                 value: Value,
-                current_time: StdInstant,
+                current_time: quanta::Instant,
                 current_duration_secs: Option<u64>,
-                last_modified_at: StdInstant,
+                last_modified_at: quanta::Instant,
                 new_duration_secs: Option<u64>,
             },
             AfterUpdate {
                 caller_line: u32,
                 key: Key,
                 value: Value,
-                current_time: StdInstant,
+                current_time: quanta::Instant,
                 current_duration_secs: Option<u64>,
                 new_duration_secs: Option<u64>,
             },
@@ -2655,7 +2655,7 @@ mod tests {
                 caller_line: u32,
                 key: Key,
                 value: Value,
-                current_time: StdInstant,
+                current_time: quanta::Instant,
                 new_duration_secs: Option<u64>,
             ) -> Self {
                 Self::AfterCreate {
@@ -2671,9 +2671,9 @@ mod tests {
                 caller_line: u32,
                 key: Key,
                 value: Value,
-                current_time: StdInstant,
+                current_time: quanta::Instant,
                 current_duration_secs: Option<u64>,
-                last_modified_at: StdInstant,
+                last_modified_at: quanta::Instant,
                 new_duration_secs: Option<u64>,
             ) -> Self {
                 Self::AfterRead {
@@ -2691,7 +2691,7 @@ mod tests {
                 caller_line: u32,
                 key: Key,
                 value: Value,
-                current_time: StdInstant,
+                current_time: quanta::Instant,
                 current_duration_secs: Option<u64>,
                 new_duration_secs: Option<u64>,
             ) -> Self {
@@ -2717,7 +2717,7 @@ mod tests {
                 &self,
                 actual_key: &u32,
                 actual_value: &char,
-                actual_current_time: StdInstant,
+                actual_current_time: quanta::Instant,
             ) -> Option<Duration> {
                 use ExpiryExpectation::*;
 
@@ -2754,9 +2754,9 @@ mod tests {
                 &self,
                 actual_key: &u32,
                 actual_value: &char,
-                actual_current_time: StdInstant,
+                actual_current_time: quanta::Instant,
                 actual_current_duration: Option<Duration>,
-                actual_last_modified_at: StdInstant,
+                actual_last_modified_at: quanta::Instant,
             ) -> Option<Duration> {
                 use ExpiryExpectation::*;
 
@@ -2807,7 +2807,7 @@ mod tests {
                 &self,
                 actual_key: &u32,
                 actual_value: &char,
-                actual_current_time: StdInstant,
+                actual_current_time: quanta::Instant,
                 actual_current_duration: Option<Duration>,
             ) -> Option<Duration> {
                 use ExpiryExpectation::*;

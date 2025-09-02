@@ -8,7 +8,7 @@
 //! This example uses the `moka::sync::Cache` type, which is a synchronous cache. The
 //! same expiry policy can be used with the asynchronous cache, `moka::future::Cache`.
 
-use std::time::{Duration, Instant};
+use std::time::Duration;
 
 use moka::{sync::Cache, Expiry};
 use rand::{
@@ -60,7 +60,11 @@ where
     }
 
     /// Calculates the expiry duration after a read operation.
-    pub fn calc_expiry_for_read(&self, read_at: Instant, modified_at: Instant) -> Option<Duration> {
+    pub fn calc_expiry_for_read(
+        &self,
+        read_at: quanta::Instant,
+        modified_at: quanta::Instant,
+    ) -> Option<Duration> {
         if matches!((self.time_to_live, self.time_to_idle), (None, None)) {
             return None;
         }
@@ -85,7 +89,7 @@ where
     }
 
     /// Calculates the elapsed time between `modified_at` and `read_at`.
-    fn elapsed_since_write(read_at: Instant, modified_at: Instant) -> Duration {
+    fn elapsed_since_write(read_at: quanta::Instant, modified_at: quanta::Instant) -> Duration {
         // NOTE: `duration_since` panics if `read_at` is earlier than `modified_at`.
         if read_at >= modified_at {
             read_at.duration_since(modified_at)
@@ -123,7 +127,12 @@ where
     /// once the duration has elapsed after the entry’s creation. This method is
     /// called for cache write methods such as `insert` and `get_with` but only
     /// when the key was not present in the cache.
-    fn expire_after_create(&self, _key: &K, _value: &V, _created_at: Instant) -> Option<Duration> {
+    fn expire_after_create(
+        &self,
+        _key: &K,
+        _value: &V,
+        _created_at: quanta::Instant,
+    ) -> Option<Duration> {
         dbg!(self.calc_expiry_for_write())
     }
 
@@ -135,7 +144,7 @@ where
         &self,
         _key: &K,
         _value: &V,
-        _updated_at: Instant,
+        _updated_at: quanta::Instant,
         duration_until_expiry: Option<Duration>,
     ) -> Option<Duration> {
         dbg!(self.calc_expiry_for_write().or(duration_until_expiry))
@@ -149,9 +158,9 @@ where
         &self,
         _key: &K,
         _value: &V,
-        read_at: Instant,
+        read_at: quanta::Instant,
         duration_until_expiry: Option<Duration>,
-        last_modified_at: Instant,
+        last_modified_at: quanta::Instant,
     ) -> Option<Duration> {
         dbg!(self
             .calc_expiry_for_read(read_at, last_modified_at)

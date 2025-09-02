@@ -1,4 +1,4 @@
-use std::time::{Duration, Instant as StdInstant};
+use std::time::Duration;
 
 #[cfg(test)]
 use std::sync::Arc;
@@ -17,14 +17,7 @@ pub(crate) struct Clock {
 #[derive(Clone)]
 enum ClockType {
     /// A clock that uses `std::time::Instant` as the source of time.
-    Standard { origin: StdInstant },
-    #[cfg(feature = "quanta")]
-    /// A clock that uses both `std::time::Instant` and `quanta::Instant` as the
-    /// sources of time.
-    Hybrid {
-        std_origin: StdInstant,
-        quanta_origin: quanta::Instant,
-    },
+    Standard { origin: quanta::Instant },
     #[cfg(test)]
     /// A clock that uses a mocked source of time.
     Mocked { mock: Arc<Mock> },
@@ -36,17 +29,8 @@ impl Default for ClockType {
     /// If the `quanta` feature is enabled, `Hybrid` will be used. Otherwise,
     /// `Standard` will be used.
     fn default() -> Self {
-        #[cfg(feature = "quanta")]
-        {
-            return ClockType::Hybrid {
-                std_origin: StdInstant::now(),
-                quanta_origin: quanta::Instant::now(),
-            };
-        }
-
-        #[allow(unreachable_code)]
         ClockType::Standard {
-            origin: StdInstant::now(),
+            origin: quanta::Instant::now(),
         }
     }
 }
@@ -74,10 +58,6 @@ impl Clock {
             ClockType::Standard { origin } => {
                 Instant::from_duration_since_clock_start(origin.elapsed())
             }
-            #[cfg(feature = "quanta")]
-            ClockType::Hybrid { std_origin, .. } => {
-                Instant::from_duration_since_clock_start(std_origin.elapsed())
-            }
             #[cfg(test)]
             ClockType::Mocked { mock } => Instant::from_duration_since_clock_start(mock.elapsed()),
         }
@@ -98,10 +78,6 @@ impl Clock {
     /// be faster than `std::time::Instant`, depending on the CPU architecture.
     pub(crate) fn fast_now(&self) -> Instant {
         match &self.ty {
-            #[cfg(feature = "quanta")]
-            ClockType::Hybrid { quanta_origin, .. } => {
-                Instant::from_duration_since_clock_start(quanta_origin.elapsed())
-            }
             ClockType::Standard { .. } => self.now(),
             #[cfg(test)]
             ClockType::Mocked { .. } => self.now(),
@@ -112,16 +88,11 @@ impl Clock {
     ///
     /// **IMPORTANT**: The caller must ensure that the `Instant` was created by this
     /// `Clock`, otherwise the resulting `std::time::Instant` will be incorrect.
-    pub(crate) fn to_std_instant(&self, instant: Instant) -> StdInstant {
+    pub(crate) fn to_std_instant(&self, instant: Instant) -> quanta::Instant {
         match &self.ty {
             ClockType::Standard { origin } => {
                 let duration = Duration::from_nanos(instant.as_nanos());
                 *origin + duration
-            }
-            #[cfg(feature = "quanta")]
-            ClockType::Hybrid { std_origin, .. } => {
-                let duration = Duration::from_nanos(instant.as_nanos());
-                *std_origin + duration
             }
             #[cfg(test)]
             ClockType::Mocked { mock } => {
@@ -139,14 +110,14 @@ impl Clock {
 
 #[cfg(test)]
 pub(crate) struct Mock {
-    origin: StdInstant,
-    now: RwLock<StdInstant>,
+    origin: quanta::Instant,
+    now: RwLock<quanta::Instant>,
 }
 
 #[cfg(test)]
 impl Default for Mock {
     fn default() -> Self {
-        let origin = StdInstant::now();
+        let origin = quanta::Instant::now();
         Self {
             origin,
             now: RwLock::new(origin),

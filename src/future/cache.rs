@@ -2114,7 +2114,7 @@ mod tests {
             atomic::{AtomicU32, AtomicU8, Ordering},
             Arc,
         },
-        time::{Duration, Instant as StdInstant},
+        time::Duration,
         vec,
     };
     use tokio::time::sleep;
@@ -2980,7 +2980,7 @@ mod tests {
                 &self,
                 _key: &&str,
                 _value: &&str,
-                _current_time: StdInstant,
+                _current_time: quanta::Instant,
             ) -> Option<Duration> {
                 self.counters.incl_actual_creations();
                 Some(Duration::from_secs(10))
@@ -2990,7 +2990,7 @@ mod tests {
                 &self,
                 _key: &&str,
                 _value: &&str,
-                _current_time: StdInstant,
+                _current_time: quanta::Instant,
                 _current_duration: Option<Duration>,
             ) -> Option<Duration> {
                 self.counters.incl_actual_updates();
@@ -3110,9 +3110,9 @@ mod tests {
                 &self,
                 _key: &&str,
                 _value: &&str,
-                _current_time: StdInstant,
+                _current_time: quanta::Instant,
                 _current_duration: Option<Duration>,
-                _last_modified_at: StdInstant,
+                _last_modified_at: quanta::Instant,
             ) -> Option<Duration> {
                 self.counters.incl_actual_reads();
                 Some(Duration::from_secs(10))
@@ -3225,7 +3225,7 @@ mod tests {
                 &self,
                 _key: &&str,
                 _value: &&str,
-                _current_time: StdInstant,
+                _current_time: quanta::Instant,
             ) -> Option<Duration> {
                 self.counters.incl_actual_creations();
                 None
@@ -3235,9 +3235,9 @@ mod tests {
                 &self,
                 _key: &&str,
                 _value: &&str,
-                _current_time: StdInstant,
+                _current_time: quanta::Instant,
                 _current_duration: Option<Duration>,
-                _last_modified_at: StdInstant,
+                _last_modified_at: quanta::Instant,
             ) -> Option<Duration> {
                 self.counters.incl_actual_reads();
                 None
@@ -3247,7 +3247,7 @@ mod tests {
                 &self,
                 _key: &&str,
                 _value: &&str,
-                _current_time: StdInstant,
+                _current_time: quanta::Instant,
                 _current_duration: Option<Duration>,
             ) -> Option<Duration> {
                 unreachable!("The `expire_after_update()` method should not be called.");
